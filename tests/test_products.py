@@ -39,3 +39,13 @@ def test_delete_product(base_url, default_headers):
     res = requests.delete(f"{base_url}/v1/products/{product_id}", headers=default_headers)
 
     assert res.status_code == 204, f"Expected 204, got {res.status_code}"
+
+def test_get_product(base_url, default_headers):
+    product_id = 3
+
+    res = requests.get(f"{base_url}/v1/products/{product_id}", headers=default_headers)
+
+    assert res.status_code == 200, f"Expected 200, got {res.status_code}"
+    data = res.json()
+
+    assert data["id"] == product_id
