@@ -1,6 +1,7 @@
 import uuid
 import os
 
+from dotenv import load_dotenv
 
 def unique_email() -> str:
     """Generate a unique email for test users."""
@@ -14,5 +15,6 @@ def get_base_url() -> str:
 
 def api_key_header() -> dict:
     """Optional API key header for endpoints that need it."""
+    load_dotenv()
     key = os.getenv("API_KEY")
     return {"X-API-Key": key} if key else {}
