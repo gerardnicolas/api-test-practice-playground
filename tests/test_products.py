@@ -49,3 +49,22 @@ def test_get_product(base_url, default_headers):
     data = res.json()
 
     assert data["id"] == product_id
+
+def test_update_product(base_url, default_headers):
+    product_id = 3
+    payload = {
+        "name": "Gold Nylon Leash",
+        "description": "Strong, 3.5m",
+        "price": 100,
+        "category": "pet",
+        "stock": 10
+    }
+
+    res = requests.put(f"{base_url}/v1/products/{product_id}", headers=default_headers, json=payload)
+
+    assert res.status_code == 200, f"Expected 200, got {res.status_code}"
+    data = res.json()
+
+    assert data["name"] == "Gold Nylon Leash"
+    assert data["price"] == 100
+    assert data["stock"] == 10
