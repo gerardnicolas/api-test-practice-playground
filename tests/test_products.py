@@ -68,3 +68,54 @@ def test_update_product(base_url, default_headers):
     assert data["name"] == "Gold Nylon Leash"
     assert data["price"] == 100
     assert data["stock"] == 10
+
+def test_product_flow(base_url, default_headers):
+    """End-to-end test for creating, getting/reading, updating, and deleting product."""
+    # Create a product
+    params = {"accept-version": "v1"}
+    payload = {
+        "sku": "SKU-005",
+        "name": "Canned Wet Food",
+        "description": "Yummy",
+        "price": 34,
+        "category": "food",
+        "stock": 18
+    }
+
+    res = requests.post(f"{base_url}/v1/products", headers=default_headers, params=params, json=payload)
+
+    assert res.status_code == 201, f"Expected 201, got {res.status_code}"
+    data = res.json()
+    product_id = data.get("id")
+    assert product_id, f"Product ID missing in response"
+
+    # Get product
+    res = requests.get(f"{base_url}/v1/products/{product_id}", headers=default_headers)
+
+    assert res.status_code == 200, f"Expected 200, got {res.status_code}"
+    data = res.json()
+
+    assert data["id"] == product_id
+
+    # Update product
+    payload = {
+        "name": "Special Canned Wet Food",
+        "description": "Extra Yummy",
+        "price": 50,
+        "category": "food",
+        "stock": 31
+    }
+
+    res = requests.put(f"{base_url}/v1/products/{product_id}", headers=default_headers, json=payload)
+
+    assert res.status_code == 200, f"Expected 200, got {res.status_code}"
+    data = res.json()
+
+    assert data["name"] == "Special Canned Wet Food"
+    assert data["price"] == 50
+    assert data["stock"] == 31
+
+    # Delete product
+    res = requests.delete(f"{base_url}/v1/products/{product_id}", headers=default_headers)
+
+    assert res.status_code == 204, f"Expected 204, got {res.status_code}"
