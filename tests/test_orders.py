@@ -44,3 +44,21 @@ def test_create_order_for_user(base_url, default_headers):
     assert "order_id" in data
     assert "total" in data
     assert data["status"] == "pending", f"Expected status is 'pending', got {data["status"]} instead" # Initial status upon order creation is 'pending'
+
+    order_id = data["order_id"]
+
+    # Update order status
+    params = {"order_id": order_id}
+    payload = {
+        "status": "confirmed"
+    }
+
+    res = requests.put(f"{base_url}/v1/orders/{order_id}/status", headers=default_headers, params=params, json=payload)
+    assert res.status_code == 200, f"Expected 200, instead got {res.status_code}"
+    data = res.json()
+    assert isinstance(data, dict)
+
+    # Assert keys are present in response
+    assert data["status"] == payload["status"], f"{payload["status"]} did not match response: {data["status"]}"
+    assert "order_id" in data
+    assert "total" in data
