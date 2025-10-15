@@ -3,7 +3,8 @@ import requests
 from utils.helpers import unique_email
 
 
-def test_create_order_for_user(base_url, default_headers):
+def test_order_flow(base_url, default_headers):
+    """End-to-end test for order creation, order status update, and order deletion."""
     # Create user (creating user to generate user_id)
     create_params = {"accept-version": "v1"}
     email = unique_email()
