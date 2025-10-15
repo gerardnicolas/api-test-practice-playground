@@ -62,3 +62,8 @@ def test_create_order_for_user(base_url, default_headers):
     assert data["status"] == payload["status"], f"{payload["status"]} did not match response: {data["status"]}"
     assert "order_id" in data
     assert "total" in data
+
+    # Delete order
+    params = {"order_id": order_id}
+    res = requests.delete(f"{base_url}/v1/orders/{order_id}", headers=default_headers, params=params)
+    assert res.status_code == 204, f"Expected 204, instead got {res.status_code}"
