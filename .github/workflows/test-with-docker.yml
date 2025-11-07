@@ -1,0 +1,82 @@
+name: Test with Docker (build app + tests)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      # fallback values (you can override via Secrets or .env.local if you commit it)
+      BASE_URL: http://api:8000
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Ensure allure-results dir exists
+        run: mkdir -p ./allure-results
+
+      # --- Build the app image (adjust path if Dockerfile is elsewhere) ---
+      - name: Build app image
+        run: |
+          # If your app Dockerfile is in ./app change the context to ./app
+          # Example: docker build -t my-app ./app
+          docker build -t my-app .
+
+      # --- Build the tests image (uses Dockerfile at repo root that runs pytest) ---
+      - name: Build tests image
+        run: docker build -t api-tests .
+
+      # --- Create a dedicated network so containers can reach each other by name ---
+      - name: Create docker network
+        run: docker network create api-tests-net || true
+
+      # --- Run the app container attached to the network ---
+      - name: Start app container
+        run: |
+          docker run -d \
+            --name api \
+            --network api-tests-net \
+            -p 8000:8000 \
+            my-app
+
+      # --- Wait for the app to be healthy / listening ---
+      - name: Wait for app to be available
+        run: |
+          for i in $(seq 1 30); do
+            if docker run --rm --network api-tests-net byrnedo/alpine-curl:latest \
+                 sh -c "curl -sSf http://api:8000/health >/dev/null 2>&1"; then
+              echo "app is up"; break
+            fi
+            echo "waiting for app... ($i)"
+            sleep 2
+          done
+
+      # --- Run tests container on same network and point to the app by container name ---
+      - name: Run tests container
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
+        run: |
+          mkdir -p ./allure-results
+          # Pass env vars directly; tests should read BASE_URL from env if not using file
+          docker run --rm \
+            --network api-tests-net \
+            -e BASE_URL="http://api:8000" \
+            -e API_KEY="$API_KEY" \
+            -v "${{ github.workspace }}/allure-results:/app/allure-results" \
+            api-tests
+
+      # --- Upload the Allure results produced by the tests container ---
+      - name: Upload Allure results
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: ./allure-results
+
+      # --- Cleanup: stop & remove containers and network ---
+      - name: Cleanup
+        if: always()
+        run: |
+          docker rm -f api || true
+          docker network rm api-tests-net || true

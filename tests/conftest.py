@@ -1,4 +1,5 @@
 import pytest
+
 from utils.helpers import get_base_url, api_key_header
 
 
@@ -12,3 +13,4 @@ def base_url():
 def default_headers():
     """Common headers for requests."""
     return api_key_header()
+

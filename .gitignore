@@ -3,5 +3,5 @@ echo "venv/
 __pycache__/
 .idea/
 .vscode/
-.env
 .DS_Store" > .gitignore
+allure-result*
